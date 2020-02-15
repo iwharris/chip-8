@@ -1,0 +1,41 @@
+{
+    "name": "@iwharris/typescript-starter",
+    "version": "0.0.1",
+    "description": "Typescript Starter",
+    "main": "dist/index.js",
+    "scripts": {
+        "compile": "tsc",
+        "prettier": "prettier --check {src,test}/**/*.[jt]s",
+        "prettier:fix": "prettier --write {src,test}/**/*.[jt]s",
+        "test": "jest",
+        "test:coverage": "jest --coverage",
+        "watch": "tsc -w"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/iwharris/typescript-starter.git"
+    },
+    "keywords": [
+        "typescript",
+        "starter",
+        "template"
+    ],
+    "author": "Ian Harris",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/iwharris/typescript-starter/issues"
+    },
+    "homepage": "https://github.com/iwharris/typescript-starter#readme",
+    "devDependencies": {
+        "@iwharris/eslint-config": "latest",
+        "@iwharris/prettier-config": "latest",
+        "@types/jest": "^24.9.1",
+        "@typescript-eslint/eslint-plugin": "^2.19.0",
+        "eslint": "^6.8.0",
+        "eslint-plugin-prettier": "^3.1.2",
+        "jest": "^24.9.0",
+        "prettier": "^1.19.1",
+        "ts-jest": "^24.3.0",
+        "typescript": "^3.7.5"
+    }
+}
