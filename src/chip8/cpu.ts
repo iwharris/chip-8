@@ -1,4 +1,11 @@
-import { BYTE_MASK, NIBBLE_MASK, WORD_MASK, MEMORY_SIZE, BIT_MASK } from './const';
+import {
+    BYTE_MASK,
+    NIBBLE_MASK,
+    WORD_MASK,
+    MEMORY_SIZE,
+    BIT_MASK,
+    MEMORY_PROGRAM_OFFSET,
+} from './const';
 import { hex, reg } from './util';
 
 type Word = number;
@@ -107,7 +114,12 @@ export class CPU {
         if (data.length > MEMORY_SIZE)
             throw new Error(`Data exceeds the available memory (${MEMORY_SIZE} bytes)`);
 
-        data.copy(this.state.memory);
+        // TODO handle ETI mode
+
+        const startingMemoryAddress = MEMORY_PROGRAM_OFFSET;
+
+        data.copy(this.state.memory, startingMemoryAddress, 0);
+        this.state.pc = startingMemoryAddress;
     }
 
     dump(): State {
