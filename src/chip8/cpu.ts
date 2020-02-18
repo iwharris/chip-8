@@ -111,7 +111,7 @@ export class CPU {
     }
 
     dump(): State {
-        return JSON.parse(JSON.stringify(this.state));
+        return this.state;
     }
 
     /**
