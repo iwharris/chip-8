@@ -135,7 +135,7 @@ export class CPU {
         const rawInstruction = this.readInstruction();
         const instruction = this.parseInstruction(rawInstruction);
 
-        console.log(`${hex(rawInstruction, 4)}: ${instruction.desc()}`);
+        console.log(`[${hex(this.state.pc, 3)}] ${hex(rawInstruction, 4)}: ${instruction.desc()}`);
 
         this.incrementProgramCounter();
 
