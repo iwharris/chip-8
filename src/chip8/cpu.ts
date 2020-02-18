@@ -137,9 +137,9 @@ export class CPU {
 
         console.log(`${hex(rawInstruction, 4)}: ${instruction.desc()}`);
 
-        instruction.execute();
-
         this.incrementProgramCounter();
+
+        instruction.execute();
     }
 
     private readAddressRegister(): Word {
