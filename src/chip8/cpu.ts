@@ -135,15 +135,15 @@ export class CPU {
     }
 
     private setAddressRegister(value: Word): void {
-        this.state.i = value && WORD_MASK; // 16 bits
+        this.state.i = value & WORD_MASK; // 16 bits
     }
 
     private readRegister(register: number): Byte {
-        return this.state.registers[register && NIBBLE_MASK];
+        return this.state.registers[register & NIBBLE_MASK];
     }
 
     private setRegister(register: number, value: Byte): void {
-        this.state.registers[register && NIBBLE_MASK] = value && BYTE_MASK;
+        this.state.registers[register & NIBBLE_MASK] = value & BYTE_MASK;
     }
 
     private readMemory(offset: number, bytesToRead: number = 1): Uint8Array {
@@ -175,13 +175,13 @@ export class CPU {
     }
 
     private parseInstruction = (instruction: Word): Instruction => {
-        const nibble: Nibble = (instruction && 0xf000) >> 12;
+        const nibble: Nibble = (instruction & 0xf000) >> 12;
 
         const nnn = (): number => instruction & 0xfff;
         const n = (): number => instruction & NIBBLE_MASK;
         const x = (): Nibble => (instruction & 0x0f00) >> 8;
         const y = (): Nibble => (instruction & 0x00f0) >> 4;
-        const kk = (): Byte => instruction && BYTE_MASK;
+        const kk = (): Byte => instruction & BYTE_MASK;
 
         switch (nibble) {
             case 0x0: {
