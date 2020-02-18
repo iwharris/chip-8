@@ -7,6 +7,6 @@ const rom = readFileSync('roms/GUESS');
 
 emu.load(rom);
 
-console.log(emu.dump());
+// console.log(emu.dump());
 
 emu.start();

@@ -50,13 +50,13 @@ export class Emulation {
             .map((byte) => hex(byte, 2))
             .join(' ');
 
-        console.log({
+        return {
             pc: hex(cpuDump.pc),
             sp: cpuDump.sp,
             stackDump,
             registerDump,
             // memDump,
-        });
+        };
     }
 
     start(): void {
@@ -64,6 +64,16 @@ export class Emulation {
 
         this.state = State.RUNNING;
 
-        for (let i = 0; i < 100; i++) this.cpu.tick();
+        try {
+            for (let i = 0; i < 100; i++) this.cpu.tick();
+        } catch (err) {
+            this.handleCrash(err);
+        }
+    }
+
+    handleCrash(err: Error) {
+        this.state = State.CRASHED;
+        console.error(err);
+        console.error(this.dump());
     }
 }
