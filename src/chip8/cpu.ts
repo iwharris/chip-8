@@ -237,7 +237,7 @@ export class CPU {
                 const byte = kk();
 
                 return {
-                    desc: () => `SE ${reg(rx)}}, ${hex(byte, 2)}`,
+                    desc: () => `SE ${reg(rx)}{}, ${hex(byte, 2)}}`,
                     execute: () => {
                         const vx = this.readRegister(rx);
                         if (vx === byte) this.incrementProgramCounter();
@@ -250,7 +250,7 @@ export class CPU {
                 const byte = kk();
 
                 return {
-                    desc: () => `SNE ${reg(rx)}}, ${hex(byte, 2)}`,
+                    desc: () => `SNE ${reg(rx)}{, ${hex(byte, 2)}}`,
                     execute: () => {
                         const vx = this.readRegister(rx);
                         if (vx !== byte) this.incrementProgramCounter();
