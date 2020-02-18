@@ -2,6 +2,7 @@ import { CPU } from './cpu';
 import { Sound } from './sound';
 import { Input } from './input';
 import { Display } from './display';
+import { hex, reg } from './util';
 
 enum State {
     HALTED = 'halted',
@@ -36,8 +37,26 @@ export class Emulation {
         this.cpu.load(data);
     }
 
-    dump(): any {
-        return this.cpu.dump();
+    dump() {
+        const cpuDump = this.cpu.dump();
+
+        const registerDump = Array.from(cpuDump.registers).map(
+            (val, idx) => `${reg(idx)}=${hex(val, 2)}`
+        );
+
+        const stackDump = Array.from(cpuDump.stack).map((val, idx) => `${idx}: ${hex(val, 4)}`);
+
+        const memDump = Array.from(cpuDump.memory)
+            .map((byte) => hex(byte, 2))
+            .join(' ');
+
+        console.log({
+            pc: hex(cpuDump.pc),
+            sp: cpuDump.sp,
+            stackDump,
+            registerDump,
+            // memDump,
+        });
     }
 
     start(): void {
