@@ -157,7 +157,8 @@ export class CPU {
 
     private readInstruction(): number {
         const instructionBytes = this.readMemory(this.state.pc, 2);
-        return (instructionBytes[0] << 16) | instructionBytes[1];
+
+        return (instructionBytes[0] << 8) | instructionBytes[1];
     }
 
     private popStack(): void {
