@@ -64,6 +64,6 @@ export class Emulation {
 
         this.state = State.RUNNING;
 
-        while (true) this.cpu.tick();
+        for (let i = 0; i < 100; i++) this.cpu.tick();
     }
 }
