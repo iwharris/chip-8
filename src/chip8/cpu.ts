@@ -117,8 +117,7 @@ export class CPU {
         // TODO handle ETI mode
 
         const startingMemoryAddress = MEMORY_PROGRAM_OFFSET;
-
-        data.copy(this.state.memory, startingMemoryAddress, 0);
+        this.setMemory(data, startingMemoryAddress);
         this.state.pc = startingMemoryAddress;
     }
 
@@ -165,6 +164,10 @@ export class CPU {
             bytes[i] = this.state.memory[offset + i];
         }
         return bytes;
+    }
+
+    private setMemory(data: Buffer, destOffset: number): void {
+        data.copy(this.state.memory, destOffset, 0);
     }
 
     private readInstruction(): number {
