@@ -6,7 +6,7 @@ import {
     BIT_MASK,
     MEMORY_PROGRAM_OFFSET,
 } from './const';
-import { hex, reg } from './util';
+import { hex, reg, pad } from './util';
 
 type Word = number;
 type Byte = number;
@@ -484,6 +484,149 @@ export class CPU {
                         this.setRegister(rx, randomValue & byte);
                     },
                 };
+            }
+            case 0xd: {
+                // DRW Vx, Vy, nibble
+                const rx = x();
+                const ry = y();
+                const byteCount = n();
+
+                return {
+                    desc: () => `DRW ${reg(rx)}, ${reg(ry)}, ${hex(nibble, 1)}`,
+                    execute: () => {
+                        // TODO draw here
+                        const vx = this.readRegister(rx);
+                        const vy = this.readRegister(ry);
+
+                        // Bytes represent the sprite
+                        const bytes = this.readMemory(this.readAddressRegister(), byteCount);
+
+                        // draw sprite at vx, vy
+                    },
+                };
+            }
+            case 0xe: {
+                const lastByte = kk();
+                const rx = x();
+
+                switch (lastByte) {
+                    case 0x9e: {
+                        // SKP Vx
+                        return {
+                            desc: () => `SKP ${reg(rx)}`,
+                            execute: () => {
+                                const vx = this.readRegister(rx);
+                                // TODO do something
+                            },
+                        };
+                    }
+                    case 0xa1: {
+                        // SKNP Vx
+                        return {
+                            desc: () => `SKNP ${reg(rx)}`,
+                            execute: () => {
+                                const vx = this.readRegister(rx);
+                                // TODO do something
+                            },
+                        };
+                    }
+                }
+            }
+            case 0xf: {
+                const lastByte = kk();
+                const rx = x();
+
+                switch (lastByte) {
+                    case 0x07: {
+                        // LD Vx, DT
+                    }
+                    case 0x0a: {
+                        // LD Vx, K
+                    }
+                    case 0x15: {
+                        // LD DT, Vx
+                        return {
+                            desc: () => `LD DT, ${reg(rx)}`,
+                            execute: () => {
+                                const vx = this.readRegister(rx);
+                                this.state.dt = vx;
+                            },
+                        };
+                    }
+                    case 0x18: {
+                        // LD ST, Vx
+                        return {
+                            desc: () => `LD ST, ${reg(rx)}`,
+                            execute: () => {
+                                const vx = this.readRegister(rx);
+                                this.state.st = vx;
+                            },
+                        };
+                    }
+                    case 0x1e: {
+                        // ADD I, Vx
+                        return {
+                            desc: () => `ADD I, ${reg(rx)}`,
+                            execute: () => {
+                                const vx = this.readRegister(rx);
+                                const i = this.readAddressRegister();
+                                this.setAddressRegister(i + vx);
+                            },
+                        };
+                    }
+                    case 0x29: {
+                        // LD F, Vx
+                        return {
+                            desc: () => `LD F, ${reg(rx)}`,
+                            execute: () => {
+                                const digit = this.readRegister(rx);
+
+                                // TODO point to memory location
+                            },
+                        };
+                    }
+                    case 0x33: {
+                        // LD B, Vx
+                        return {
+                            desc: () => `LD B, ${reg(rx)}`,
+                            execute: () => {
+                                const vx = this.readRegister(rx);
+                                const str = pad(vx.toString(), 3);
+
+                                const byteArray = new Uint8Array(
+                                    str.split('').map((digit) => parseInt(digit))
+                                );
+
+                                this.setMemory(Buffer.from(byteArray), this.readAddressRegister());
+                            },
+                        };
+                    }
+                    case 0x55: {
+                        // LD [I], Vx
+                        return {
+                            desc: () => `LD [I], ${reg(rx)}`,
+                            execute: () => {
+                                const registerValues = this.state.registers.slice(0, rx);
+
+                                this.setMemory(
+                                    Buffer.from(registerValues),
+                                    this.readAddressRegister()
+                                );
+                            },
+                        };
+                    }
+                    case 0x65: {
+                        // LD Vx, [I]
+                        return {
+                            desc: () => `LD ${reg(rx)}, [I]`,
+                            execute: () => {
+                                const values = this.readMemory(this.readAddressRegister(), rx);
+
+                                Buffer.from(values).copy(this.state.registers);
+                            },
+                        };
+                    }
+                }
             }
         }
 
