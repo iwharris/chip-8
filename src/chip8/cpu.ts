@@ -5,7 +5,9 @@ import {
     MEMORY_SIZE,
     BIT_MASK,
     MEMORY_PROGRAM_OFFSET,
+    MEMORY_SPRITE_OFFSET,
 } from './const';
+import { SPRITES, SPRITE_SIZE } from './sprite';
 import { hex, reg, pad } from './util';
 
 type Word = number;
@@ -108,6 +110,9 @@ export class CPU {
         this.state.stack = new Uint16Array(16);
         this.state.dt = 0;
         this.state.st = 0;
+
+        // Load sprites into memory
+        this.setMemory(SPRITES, MEMORY_SPRITE_OFFSET);
     }
 
     load(data: Buffer): void {
@@ -117,8 +122,10 @@ export class CPU {
         // TODO handle ETI mode
 
         const startingMemoryAddress = MEMORY_PROGRAM_OFFSET;
-        this.setMemory(data, startingMemoryAddress);
         this.state.pc = startingMemoryAddress;
+
+        // Load program into memory
+        this.setMemory(data, startingMemoryAddress);
     }
 
     dump(): State {
@@ -188,6 +195,10 @@ export class CPU {
 
     private incrementProgramCounter(): void {
         this.state.pc += 2;
+    }
+
+    private getSpriteAddress(char: Nibble): number {
+        return MEMORY_SPRITE_OFFSET + char * SPRITE_SIZE;
     }
 
     private parseInstruction = (instruction: Word): Instruction => {
@@ -581,7 +592,7 @@ export class CPU {
                             execute: () => {
                                 const digit = this.readRegister(rx);
 
-                                // TODO point to memory location
+                                this.setAddressRegister(this.getSpriteAddress(digit));
                             },
                         };
                     }
