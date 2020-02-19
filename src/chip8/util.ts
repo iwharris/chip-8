@@ -1,9 +1,9 @@
 import { NIBBLE_MASK } from './const';
 
-const pad = (str: string, digits?: number): string => {
-    digits = digits || str.length;
+export const pad = (str: string, desiredLength?: number, digit: string = '0'): string => {
+    desiredLength = desiredLength || str.length;
 
-    return '0'.repeat(digits - str.length) + str;
+    return digit.repeat(desiredLength - str.length) + str;
 };
 
 export const bin = (value: number, padDigits?: number): string => pad(value.toString(2), padDigits);
