@@ -1,7 +1,10 @@
 import { readFileSync } from 'fs';
 import { Emulation } from './chip8/emulation';
+import { StubKeyboardInput } from './chip8/input';
 
-const emu = new Emulation({} as any, {} as any, {} as any);
+const input = new StubKeyboardInput();
+
+const emu = new Emulation({} as any, input, {} as any);
 
 const rom = readFileSync('roms/GUESS');
 

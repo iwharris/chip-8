@@ -9,6 +9,7 @@ import {
 } from './const';
 import { SPRITES, SPRITE_SIZE } from './sprite';
 import { hex, reg, pad } from './util';
+import { Input } from './input';
 
 type Word = number;
 type Byte = number;
@@ -87,6 +88,8 @@ export interface Instruction {
 }
 
 export class CPU {
+    private input: Input;
+
     private state: State = {
         pc: 0,
         sp: 0,
@@ -98,7 +101,8 @@ export class CPU {
         st: 0,
     };
 
-    constructor() {
+    constructor(input: Input) {
+        this.input = input;
         this.reset();
     }
 
@@ -527,7 +531,7 @@ export class CPU {
                             desc: () => `SKP ${reg(rx)}`,
                             execute: () => {
                                 const vx = this.readRegister(rx);
-                                // TODO do something
+                                if (this.input.isPressed(vx)) this.incrementProgramCounter();
                             },
                         };
                     }
@@ -537,7 +541,7 @@ export class CPU {
                             desc: () => `SKNP ${reg(rx)}`,
                             execute: () => {
                                 const vx = this.readRegister(rx);
-                                // TODO do something
+                                if (!this.input.isPressed(vx)) this.incrementProgramCounter();
                             },
                         };
                     }
@@ -550,9 +554,21 @@ export class CPU {
                 switch (lastByte) {
                     case 0x07: {
                         // LD Vx, DT
+                        return {
+                            desc: () => `LD ${reg(rx)}, DT`,
+                            execute: () => {
+                                this.setRegister(rx, this.state.dt);
+                            },
+                        };
                     }
                     case 0x0a: {
                         // LD Vx, K
+                        return {
+                            desc: () => `LD ${reg(rx)}, K`,
+                            execute: () => {
+                                // Wait for keypress
+                            },
+                        };
                     }
                     case 0x15: {
                         // LD DT, Vx
