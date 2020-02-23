@@ -461,7 +461,7 @@ export class CPU {
                                 const vx = this.readRegister(rx);
                                 // const vy = this.readRegister(ry);
                                 this.setRegister(rx, vx << 1);
-                                this.setRegister(Register.VF, (vx & 0x80) >> 7 === 1 ? 1 : 0);
+                                this.setRegister(Register.VF, ((vx >> 7) & 0x1) === 1 ? 1 : 0);
                             },
                         };
                     }
