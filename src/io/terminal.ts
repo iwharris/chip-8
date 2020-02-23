@@ -9,6 +9,8 @@ import {
     DISPLAY_HEIGHT,
 } from './display';
 
+export const PIXEL_CHAR: string = '\u2588';
+
 export type TerminalInterfaceOptions = DisplayOptions & {};
 
 export class TerminalInterface implements CPUInterface {
@@ -47,7 +49,7 @@ export class TerminalInterface implements CPUInterface {
         x %= this.width;
         y %= this.height;
 
-        const currentPixelValue = this.screenBuffer.get({ x, y }).char === 'X' ? 1 : 0;
+        const currentPixelValue = this.screenBuffer.get({ x, y }).char === PIXEL_CHAR ? 1 : 0;
 
         const xorValue = value ^ currentPixelValue;
 
@@ -60,7 +62,7 @@ export class TerminalInterface implements CPUInterface {
                 dx: 1,
                 dy: 0,
             },
-            xorValue ? 'X' : ' '
+            xorValue ? PIXEL_CHAR : ' '
         );
 
         return currentPixelValue && !xorValue ? 1 : 0;
@@ -70,6 +72,7 @@ export class TerminalInterface implements CPUInterface {
         this.screenBuffer.draw({
             delta: true,
         });
+        // this.terminal.moveTo(0, 0);
     }
 
     isKeyPressed(key: number): boolean {
