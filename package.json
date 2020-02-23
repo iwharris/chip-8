@@ -39,5 +39,11 @@
         "prettier": "^1.19.1",
         "ts-jest": "^24.3.0",
         "typescript": "^3.7.5"
+    },
+    "dependencies": {
+        "@types/random": "^2.1.0",
+        "@types/terminal-kit": "^1.28.0",
+        "random": "^2.1.1",
+        "terminal-kit": "^1.33.15"
     }
 }

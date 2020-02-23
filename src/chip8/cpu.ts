@@ -1,15 +1,7 @@
-import {
-    BYTE_MASK,
-    NIBBLE_MASK,
-    WORD_MASK,
-    MEMORY_SIZE,
-    BIT_MASK,
-    MEMORY_PROGRAM_OFFSET,
-    MEMORY_SPRITE_OFFSET,
-} from './const';
+import random from 'random';
 import { SPRITES, SPRITE_SIZE } from './sprite';
-import { hex, reg, pad } from './util';
-import { Input } from './input';
+import { hex, reg, pad } from '../util/string';
+import { BIT_MASK, NIBBLE_MASK, BYTE_MASK, WORD_MASK } from '../util/mask';
 
 type Word = number;
 type Byte = number;
@@ -34,10 +26,35 @@ enum Register {
     VF,
 }
 
+/**
+ * Size of system memory, in bytes
+ */
+export const MEMORY_SIZE = 0xfff;
+
+/**
+ * Offset where most CHIP-8 programs start
+ */
+export const MEMORY_PROGRAM_OFFSET = 0x200;
+
+/**
+ * Offset where sprites start
+ */
+export const MEMORY_SPRITE_OFFSET = 0x0;
+
+/**
+ * Offset where ETI 600 CHIP-8 programs start
+ */
+export const MEMORY_ETI_OFFSET = 0x600;
+
+/**
+ * Maximum depth of the stack
+ */
+export const STACK_SIZE = 16;
+
 // No-op function
 const NOOP = () => undefined;
 
-export interface State {
+interface State {
     /**
      * Program Counter (16-bit)
      */
@@ -81,14 +98,13 @@ export interface State {
     st: Byte;
 }
 
-export interface Instruction {
-    // instruction: Word;
+interface Instruction {
     desc: () => string;
     execute: () => void;
 }
 
 export class CPU {
-    private input: Input;
+    private readonly io: CPUInterface;
 
     private state: State = {
         pc: 0,
@@ -101,8 +117,8 @@ export class CPU {
         st: 0,
     };
 
-    constructor(input: Input) {
-        this.input = input;
+    constructor(io: CPUInterface) {
+        this.io = io;
         this.reset();
     }
 
@@ -117,6 +133,8 @@ export class CPU {
 
         // Load sprites into memory
         this.setMemory(SPRITES, MEMORY_SPRITE_OFFSET);
+
+        this.io.clearDisplay();
     }
 
     load(data: Buffer): void {
@@ -145,11 +163,13 @@ export class CPU {
         const rawInstruction = this.readInstruction();
         const instruction = this.parseInstruction(rawInstruction);
 
-        console.log(`[${hex(this.state.pc, 3)}] ${hex(rawInstruction, 4)}: ${instruction.desc()}`);
+        // console.log(`[${hex(this.state.pc, 3)}] ${hex(rawInstruction, 4)}: ${instruction.desc()}`);
 
         this.incrementProgramCounter();
 
         instruction.execute();
+
+        this.io.render();
     }
 
     private readAddressRegister(): Word {
@@ -219,8 +239,7 @@ export class CPU {
                 if (instruction === 0x00e0) {
                     return {
                         desc: () => 'CLS',
-                        // TODO clear display
-                        execute: NOOP,
+                        execute: () => this.io.clearDisplay(),
                     };
                 } else if (instruction === 0x00ee) {
                     return {
@@ -494,8 +513,7 @@ export class CPU {
                 return {
                     desc: () => `RND ${reg(rx)}, ${hex(byte, 2)}`,
                     execute: () => {
-                        // TODO randomize here
-                        const randomValue = 0;
+                        const randomValue = random.int(0, 255); // TODO make seedable
                         this.setRegister(rx, randomValue & byte);
                     },
                 };
@@ -509,14 +527,23 @@ export class CPU {
                 return {
                     desc: () => `DRW ${reg(rx)}, ${reg(ry)}, ${hex(nibble, 1)}`,
                     execute: () => {
-                        // TODO draw here
                         const vx = this.readRegister(rx);
                         const vy = this.readRegister(ry);
 
-                        // Bytes represent the sprite
+                        // Get the bytes representing the sprite
                         const bytes = this.readMemory(this.readAddressRegister(), byteCount);
 
                         // draw sprite at vx, vy
+                        let vf: number = 0;
+                        // console.log(`drawing ${byteCount} bytes at [${vx}, ${vy}]`);
+                        for (let y = 0; y < byteCount; y++) {
+                            for (let x = 0; x < 8; x++) {
+                                const pixelValue = (bytes[y] >> x) & 0x1;
+                                vf = this.io.drawPixel(vx + x, vy + y, pixelValue) || vf;
+                            }
+                        }
+
+                        this.setRegister(Register.VF, vf);
                     },
                 };
             }
@@ -531,7 +558,7 @@ export class CPU {
                             desc: () => `SKP ${reg(rx)}`,
                             execute: () => {
                                 const vx = this.readRegister(rx);
-                                if (this.input.isPressed(vx)) this.incrementProgramCounter();
+                                if (this.io.isKeyPressed(vx)) this.incrementProgramCounter();
                             },
                         };
                     }
@@ -541,7 +568,7 @@ export class CPU {
                             desc: () => `SKNP ${reg(rx)}`,
                             execute: () => {
                                 const vx = this.readRegister(rx);
-                                if (!this.input.isPressed(vx)) this.incrementProgramCounter();
+                                if (!this.io.isKeyPressed(vx)) this.incrementProgramCounter();
                             },
                         };
                     }
@@ -566,7 +593,8 @@ export class CPU {
                         return {
                             desc: () => `LD ${reg(rx)}, K`,
                             execute: () => {
-                                // Wait for keypress
+                                const val = this.io.waitForKeypress();
+                                this.setRegister(rx, val);
                             },
                         };
                     }
@@ -659,4 +687,52 @@ export class CPU {
 
         throw new Error(`Unknown instruction '${hex(instruction)}'`);
     };
+}
+
+/**
+ * The CPU Interface is the only way for the CPU to communicate with
+ * I/O devices: display, input, and sound.
+ */
+export interface CPUInterface {
+    /**
+     * Blank the display.
+     */
+    clearDisplay: () => void;
+
+    /**
+     * Draw a pixel value onto the display. The pixel is XORed onto the display.
+     * If it erases a pixel, return true; otherwise, return false.
+     *
+     * @param x {number} x-coordinate of the pixel (will wrap if it overflows the display width)
+     * @param y {number} y-coordinate of the pixel (will wrap if it overflows the display height)
+     * @param value {boolean} If true, represents a 1 for this pixel; otherwise, represents a 0
+     *
+     * @returns true if a pixel was erased, false otherwise
+     */
+    drawPixel: (x: number, y: number, value: number) => number;
+
+    /**
+     * Called once per CPU cycle. Can be used to blit a framebuffer to display.
+     */
+    render: () => void;
+
+    /**
+     * Checks whether a key is pressed.
+     *
+     * @param key {number} the key to query
+     *
+     * @returns true if <key> is currently down
+     */
+    isKeyPressed: (key: number) => boolean;
+
+    /**
+     * Waits for any keypress and then returns the value of the key that is pressed.
+     *
+     * @returns the number of the first key that is pressed
+     */
+    waitForKeypress: () => number;
+
+    // Sound methods
+
+    // TODO
 }

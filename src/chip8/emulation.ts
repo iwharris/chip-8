@@ -1,8 +1,5 @@
-import { CPU } from './cpu';
-import { Sound } from './sound';
-import { Input } from './input';
-import { Display } from './display';
-import { hex, reg } from './util';
+import { CPU, CPUInterface } from './cpu';
+import { hex, reg } from '../util/string';
 
 enum State {
     HALTED = 'halted',
@@ -14,22 +11,15 @@ enum State {
 export class Emulation {
     private state: State;
     private cpu: CPU;
-    private display: Display;
-    private input: Input;
-    private sound: Sound;
 
     get status(): State {
         return this.state;
     }
 
-    constructor(display: Display, input: Input, sound: Sound) {
+    constructor(cpuInterface: CPUInterface) {
         this.state = State.HALTED;
 
-        this.display = display;
-        this.input = input;
-        this.sound = sound;
-
-        this.cpu = new CPU();
+        this.cpu = new CPU(cpuInterface);
         this.cpu.reset();
     }
 
@@ -55,7 +45,7 @@ export class Emulation {
             sp: cpuDump.sp,
             stackDump,
             registerDump,
-            // memDump,
+            memDump,
         };
     }
 
@@ -64,10 +54,12 @@ export class Emulation {
 
         this.state = State.RUNNING;
 
-        try {
-            for (let i = 0; i < 100; i++) this.cpu.tick();
-        } catch (err) {
-            this.handleCrash(err);
+        while (this.state === State.RUNNING) {
+            try {
+                this.cpu.tick();
+            } catch (err) {
+                this.handleCrash(err);
+            }
         }
     }
 
