@@ -1,7 +1,7 @@
 import random from 'random';
 import { SPRITES, SPRITE_SIZE } from './sprite';
 import { hex, reg, pad } from '../util/string';
-import { BIT_MASK, NIBBLE_MASK, BYTE_MASK, WORD_MASK } from '../util/mask';
+import { BIT_MASK, NIBBLE_MASK, BYTE_MASK, WORD_MASK, ADDRESS_MASK } from '../util/mask';
 
 type Word = number;
 type Byte = number;
@@ -228,7 +228,7 @@ export class CPU {
     private parseInstruction = (instruction: Word): Instruction => {
         const nibble: Nibble = (instruction & 0xf000) >> 12;
 
-        const nnn = (): number => instruction & 0xfff;
+        const nnn = (): number => instruction & ADDRESS_MASK;
         const n = (): number => instruction & NIBBLE_MASK;
         const x = (): Nibble => (instruction & 0x0f00) >> 8;
         const y = (): Nibble => (instruction & 0x00f0) >> 4;
@@ -496,8 +496,7 @@ export class CPU {
                 return {
                     desc: () => `JP V0, ${hex(a, 3)}`,
                     execute: () => {
-                        const v0 = this.readRegister(Register.V0);
-                        this.state.pc = a + v0;
+                        this.state.pc = a + this.readRegister(Register.V0);
                     },
                 };
             }
@@ -534,7 +533,7 @@ export class CPU {
                         // console.log(`drawing ${byteCount} bytes at [${vx}, ${vy}]`);
                         for (let y = 0; y < byteCount; y++) {
                             for (let x = 0; x < 8; x++) {
-                                const pixelValue = (bytes[y] >> x) & 0x1;
+                                const pixelValue = (bytes[y] >> x) & BIT_MASK;
                                 vf = this.io.drawPixel(vx + x, vy + y, pixelValue) || vf;
                             }
                         }
