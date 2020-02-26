@@ -428,12 +428,10 @@ export class CPU {
                         // SHR Vx {, Vy}
                         return {
                             desc: () => `SHR ${reg(rx)} {, ${reg(ry)}}`,
-                            // TODO double check this one
                             execute: () => {
-                                const vx = this.readRegister(rx);
-                                // const vy = this.readRegister(ry);
-                                this.setRegister(rx, vx >> 1);
-                                this.setRegister(Register.VF, (vx & BIT_MASK) === 1 ? 1 : 0);
+                                const vy = this.readRegister(ry);
+                                this.setRegister(rx, vy >> 1);
+                                this.setRegister(Register.VF, vy & BIT_MASK);
                             },
                         };
                     }
@@ -456,12 +454,10 @@ export class CPU {
                         // SHL Vx {, Vy}
                         return {
                             desc: () => `SHL ${reg(rx)} {, ${reg(ry)}}`,
-                            // TODO double check this one
                             execute: () => {
-                                const vx = this.readRegister(rx);
-                                // const vy = this.readRegister(ry);
-                                this.setRegister(rx, vx << 1);
-                                this.setRegister(Register.VF, ((vx >> 7) & 0x1) === 1 ? 1 : 0);
+                                const vy = this.readRegister(ry);
+                                this.setRegister(rx, vy << 1);
+                                this.setRegister(Register.VF, (vy >> 7) & BIT_MASK);
                             },
                         };
                     }
