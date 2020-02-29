@@ -1,20 +1,19 @@
-# typescript-starter
+# chip-8
 
-[![codecov](https://codecov.io/gh/iwharris/typescript-starter/branch/master/graph/badge.svg)](https://codecov.io/gh/iwharris/typescript-starter)
-[![CircleCI](https://circleci.com/gh/iwharris/typescript-starter.svg?style=svg)](https://circleci.com/gh/iwharris/typescript-starter)
+<!-- [![codecov](https://codecov.io/gh/iwharris/typescript-starter/branch/master/graph/badge.svg)](https://codecov.io/gh/iwharris/typescript-starter)
+[![CircleCI](https://circleci.com/gh/iwharris/typescript-starter.svg?style=svg)](https://circleci.com/gh/iwharris/typescript-starter) -->
 
-Boilerplate repo for personal Typescript projects
-
-## Components
-
-| Component/Framework                                            | Purpose                | Comments                                                                   |
-| -------------------------------------------------------------- | ---------------------- | -------------------------------------------------------------------------- |
-| [Jest](https://jestjs.io/)                                     | Test Framework         | Using [ts-jest](https://github.com/kulshekhar/ts-jest) for JIT compilation |
-| [Prettier](https://prettier.io/)/[ESLint](https://eslint.org/) | Code style & linting   |
-| [CircleCI](https://circleci.com/)                              | Continuous Integration | Supports publishing to NPM                                                 |
-| [Codecov](https://codecov.io/)                                 | Code coverage tracking |
+CHIP-8 emulator implemented in Typescript
 
 ## Usage
+
+### Development
+
+Run the emulator with a ROM:
+
+```bash
+npm run dev <PATH_TO_ROM>
+```
 
 ### Compile
 
@@ -36,7 +35,7 @@ npm run prettier
 npm run prettier:fix
 ```
 
-### Test
+<!-- ### Test
 
 ```bash
 # Run test suite
@@ -44,9 +43,9 @@ npm test
 
 # Generate a coverage report
 npm run test:coverage
-```
+``` -->
 
-### CI/CD
+<!-- ### CI/CD
 
 To set up CircleCI integration, set the following env vars on the CircleCI project:
 
@@ -59,4 +58,4 @@ To publish a new version to npm:
 npm version patch # or minor, or major
 git push
 git push --tags
-```
+``` -->
