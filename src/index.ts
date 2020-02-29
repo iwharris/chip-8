@@ -6,7 +6,7 @@ const terminalInterface = new TerminalInterface();
 
 const emu = new Emulation(terminalInterface);
 
-const rom = readFileSync('roms/GUESS');
+const rom = readFileSync(process.argv[2]);
 
 emu.load(rom);
 
