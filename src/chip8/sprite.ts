@@ -1,4 +1,5 @@
 import { Nibble } from '../util/mask';
+import { Coordinate2D } from '../util/2d';
 
 /**
  * Height of each system sprite, in bytes
@@ -13,11 +14,6 @@ export const SPRITE_WIDTH = 1;
 export const getSystemSpriteOffset = (char: Nibble, spriteSize: number = SYSTEM_SPRITE_HEIGHT) => {
     return char * spriteSize;
 };
-
-/**
- * A tuple that describes coordinates in the form [x, y]
- */
-export type Coordinate2D = [number, number];
 
 export function* pixelIterator(
     spriteHeight: number,

@@ -1,7 +1,8 @@
 import { MEMORY_SIZE, MEMORY_PROGRAM_OFFSET, MEMORY_SPRITE_OFFSET } from '../util/const';
-import { WORD_MASK, NIBBLE_MASK, BYTE_MASK } from '../util/mask';
-import { getSystemSpriteOffset, SPRITES } from './sprite';
+import { WORD_MASK, NIBBLE_MASK, BYTE_MASK, BIT_MASK } from '../util/mask';
+import { getSystemSpriteOffset, SPRITES, pixelIterator } from './sprite';
 import { CPUInterface } from './io';
+import { Coordinate2D, isInBounds } from '../util/2d';
 
 type Word = number;
 type Byte = number;
@@ -176,4 +177,24 @@ export const loadSystemSprites = (
 
 export const getSystemSpriteAddress = (state: State, char: Nibble): number => {
     return state.systemFontOffset + getSystemSpriteOffset(char);
+};
+
+export const drawSprite = (state: State, origin: Coordinate2D, bytes: Uint8Array): void => {
+    const [originX, originY] = origin;
+
+    const vx = originX % state.io.displayWidth;
+    const vy = originY % state.io.displayHeight;
+
+    let vf: number = 0;
+    // console.log(`drawing ${byteCount} bytes at [${vx}, ${vy}]`);
+    for (const [x, y] of pixelIterator(bytes.byteLength)) {
+        const screenX = vx + x;
+        const screenY = vy + y;
+        if (isInBounds(state.io.displayWidth, state.io.displayHeight, [screenX, screenY])) {
+            const pixelValue = (bytes[y] >> x) & BIT_MASK;
+            vf = state.io.drawPixel(screenX, screenY, pixelValue) || vf;
+        }
+    }
+
+    setRegister(state, Register.VF, vf);
 };

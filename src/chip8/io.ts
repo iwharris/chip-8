@@ -3,6 +3,9 @@
  * I/O devices: display, input, and sound.
  */
 export interface CPUInterface {
+    readonly displayWidth: number;
+    readonly displayHeight: number;
+
     /**
      * Blank the display.
      */

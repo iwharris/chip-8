@@ -20,6 +20,14 @@ export class TerminalInterface implements CPUInterface {
     private width: number;
     private height: number;
 
+    get displayWidth() {
+        return this.width;
+    }
+
+    get displayHeight() {
+        return this.height;
+    }
+
     constructor(options: TerminalInterfaceOptions = {}) {
         const { width, height, color } = options;
         this.color = color || DEFAULT_DISPLAY_COLOR;
@@ -46,10 +54,6 @@ export class TerminalInterface implements CPUInterface {
 
     drawPixel(x: number, y: number, value: number): number {
         // TODO clip if a sprite would intersect the edge of the screen
-
-        // console.log(`draw [${x}, ${y}] ${value}`);
-        x %= this.width;
-        y %= this.height;
 
         const currentPixelValue = this.screenBuffer.get({ x, y }).char === PIXEL_CHAR ? 1 : 0;
 

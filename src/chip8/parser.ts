@@ -13,9 +13,11 @@ import {
     readAddressRegister,
     setMemory,
     getSystemSpriteAddress,
+    drawSprite,
 } from './state';
 import { pixelIterator } from './sprite';
 import { hex, reg, pad } from '../util/string';
+import { Coordinate2D } from '../util/2d';
 
 // Helpers
 const nnn = (instruction: number): number => instruction & ADDRESS_MASK;
@@ -323,21 +325,12 @@ export const parseInstruction = (instruction: Word): Instruction => {
             return {
                 desc: () => `DRW ${reg(rx)}, ${reg(ry)}, ${hex(nibble, 1)}`,
                 execute: (state: State) => {
-                    const vx = readRegister(state, rx);
-                    const vy = readRegister(state, ry);
+                    const origin = [rx, ry].map((reg) => readRegister(state, reg)) as Coordinate2D;
 
                     // Get the bytes representing the sprite
                     const bytes = readMemory(state, readAddressRegister(state), byteCount);
 
-                    // draw sprite at vx, vy
-                    let vf: number = 0;
-                    // console.log(`drawing ${byteCount} bytes at [${vx}, ${vy}]`);
-                    for (const [x, y] of pixelIterator(byteCount)) {
-                        const pixelValue = (bytes[y] >> x) & BIT_MASK;
-                        vf = state.io.drawPixel(vx + x, vy + y, pixelValue) || vf;
-                    }
-
-                    setRegister(state, Register.VF, vf);
+                    drawSprite(state, origin, bytes);
                 },
             };
         }
