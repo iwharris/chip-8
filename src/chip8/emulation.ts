@@ -1,4 +1,5 @@
-import { CPU, CPUInterface } from './cpu';
+import { CPU } from './cpu';
+import { CPUInterface } from './io';
 import { hex, reg } from '../util/string';
 
 enum State {

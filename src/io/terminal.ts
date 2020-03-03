@@ -1,5 +1,5 @@
 import terminalKit from 'terminal-kit';
-import { CPUInterface } from '../chip8/cpu';
+import { CPUInterface } from '../chip8/io';
 import {
     // FrameBuffer,
     Color,
@@ -45,6 +45,8 @@ export class TerminalInterface implements CPUInterface {
     }
 
     drawPixel(x: number, y: number, value: number): number {
+        // TODO clip if a sprite would intersect the edge of the screen
+
         // console.log(`draw [${x}, ${y}] ${value}`);
         x %= this.width;
         y %= this.height;
@@ -57,11 +59,9 @@ export class TerminalInterface implements CPUInterface {
             {
                 x,
                 y,
-                attr: { color: this.color },
-                wrap: false,
-                dx: 1,
-                dy: 0,
-            },
+                // attr: { color: this.color },
+                // direction: null,
+            } as any,
             xorValue ? PIXEL_CHAR : ' '
         );
 
@@ -70,6 +70,8 @@ export class TerminalInterface implements CPUInterface {
 
     render(): void {
         this.screenBuffer.draw({
+            x: 0,
+            y: 0,
             delta: true,
         });
         // this.terminal.moveTo(0, 0);
@@ -80,6 +82,8 @@ export class TerminalInterface implements CPUInterface {
     }
 
     waitForKeypress(): number {
+        // while (!this.terminal.)
+
         return 0;
     }
 }

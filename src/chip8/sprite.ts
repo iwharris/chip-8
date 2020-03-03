@@ -1,10 +1,38 @@
-/**
- * Length of each sprite, in bytes
- */
-export const SPRITE_SIZE = 5;
+import { Nibble } from '../util/mask';
 
 /**
- * Raw sprite data
+ * Height of each system sprite, in bytes
+ */
+export const SYSTEM_SPRITE_HEIGHT = 5;
+
+/**
+ * Width of each sprite, in bytes
+ */
+export const SPRITE_WIDTH = 1;
+
+export const getSystemSpriteOffset = (char: Nibble, spriteSize: number = SYSTEM_SPRITE_HEIGHT) => {
+    return char * spriteSize;
+};
+
+/**
+ * A tuple that describes coordinates in the form [x, y]
+ */
+export type Coordinate2D = [number, number];
+
+export function* pixelIterator(
+    spriteHeight: number,
+    spriteWidth: number = SPRITE_WIDTH
+): Generator<Coordinate2D> {
+    // TODO are system sprites 4 pixels wide or 8?
+    for (let y = 0; y < spriteHeight; y++) {
+        for (let x = 0; x < spriteWidth * 8; x++) {
+            yield [x, y];
+        }
+    }
+}
+
+/**
+ * Raw sprite data for the system font
  */
 export const SPRITES = Buffer.from([
     // 0
