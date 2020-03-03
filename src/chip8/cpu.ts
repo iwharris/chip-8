@@ -1,5 +1,5 @@
 import {
-    State,
+    CPUState,
     createState,
     resetState,
     readInstruction,
@@ -9,9 +9,10 @@ import {
 } from './state';
 import { parseInstruction } from './parser';
 import { CPUInterface } from './io';
+import { CPUDump } from '../util/dump';
 
 export class CPU {
-    private state: State;
+    private state: CPUState;
 
     constructor(io: CPUInterface) {
         this.state = createState(io);
@@ -31,8 +32,8 @@ export class CPU {
         loadRom(this.state, data);
     }
 
-    dump(): State {
-        return this.state;
+    dump(): CPUDump {
+        return new CPUDump(this.state);
     }
 
     /**

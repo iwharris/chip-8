@@ -1,6 +1,6 @@
-import { CPU } from './cpu';
-import { CPUInterface } from './io';
-import { hex, reg } from '../util/string';
+import { CPU, CPUInterface } from './chip8';
+
+import { CPUDump } from './util/dump';
 
 enum State {
     HALTED = 'halted',
@@ -28,26 +28,8 @@ export class Emulation {
         this.cpu.load(data);
     }
 
-    dump() {
-        const cpuDump = this.cpu.dump();
-
-        const registerDump = Array.from(cpuDump.registers).map(
-            (val, idx) => `${reg(idx)}=${hex(val, 2)}`
-        );
-
-        const stackDump = Array.from(cpuDump.stack).map((val, idx) => `${idx}: ${hex(val, 4)}`);
-
-        const memDump = Array.from(cpuDump.memory)
-            .map((byte) => hex(byte, 2))
-            .join(' ');
-
-        return {
-            pc: hex(cpuDump.pc),
-            sp: cpuDump.sp,
-            stackDump,
-            registerDump,
-            memDump,
-        };
+    dump(): CPUDump {
+        return this.cpu.dump();
     }
 
     start(): void {
@@ -67,6 +49,6 @@ export class Emulation {
     handleCrash(err: Error) {
         this.state = State.CRASHED;
         console.error(err);
-        console.error(this.dump());
+        console.error(this.dump().toJson());
     }
 }

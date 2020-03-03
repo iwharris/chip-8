@@ -8,7 +8,7 @@ type Word = number;
 type Byte = number;
 type Nibble = number;
 
-export const createState = (io: CPUInterface): State => ({
+export const createState = (io: CPUInterface): CPUState => ({
     pc: 0,
     sp: 0,
     i: 0,
@@ -21,7 +21,7 @@ export const createState = (io: CPUInterface): State => ({
     systemFontOffset: -1,
 });
 
-export const resetState = (state: State): void => {
+export const resetState = (state: CPUState): void => {
     state.i = 0;
     state.sp = 0;
     state.memory = new Uint8Array(MEMORY_SIZE);
@@ -31,7 +31,7 @@ export const resetState = (state: State): void => {
     state.st = 0;
 };
 
-export interface State {
+export interface CPUState {
     /**
      * Program Counter (16-bit)
      */
@@ -104,7 +104,7 @@ export enum Register {
     VF,
 }
 
-export const loadRom = (state: State, data: Buffer): void => {
+export const loadRom = (state: CPUState, data: Buffer): void => {
     if (data.length > MEMORY_SIZE - MEMORY_PROGRAM_OFFSET)
         throw new Error(`Data exceeds the available memory (${MEMORY_SIZE} bytes)`);
 
@@ -117,23 +117,27 @@ export const loadRom = (state: State, data: Buffer): void => {
     setMemory(state, data, startingMemoryAddress);
 };
 
-export const readAddressRegister = (state: State): Word => {
+export const readAddressRegister = (state: CPUState): Word => {
     return state.i;
 };
 
-export const setAddressRegister = (state: State, value: Word): void => {
+export const setAddressRegister = (state: CPUState, value: Word): void => {
     state.i = value & WORD_MASK; // 16 bits
 };
 
-export const readRegister = (state: State, register: number): Byte => {
+export const readRegister = (state: CPUState, register: number): Byte => {
     return state.registers[register & NIBBLE_MASK];
 };
 
-export const setRegister = (state: State, register: number, value: Byte): void => {
+export const setRegister = (state: CPUState, register: number, value: Byte): void => {
     state.registers[register & NIBBLE_MASK] = value & BYTE_MASK;
 };
 
-export const readMemory = (state: State, offset: number, bytesToRead: number = 1): Uint8Array => {
+export const readMemory = (
+    state: CPUState,
+    offset: number,
+    bytesToRead: number = 1
+): Uint8Array => {
     const numElementsToRead = bytesToRead / state.memory.BYTES_PER_ELEMENT;
     const bytes = new Uint8Array(numElementsToRead);
     for (let i = 0; i < numElementsToRead; i++) {
@@ -142,32 +146,32 @@ export const readMemory = (state: State, offset: number, bytesToRead: number = 1
     return bytes;
 };
 
-export const setMemory = (state: State, data: Buffer, destOffset: number): void => {
+export const setMemory = (state: CPUState, data: Buffer, destOffset: number): void => {
     data.copy(state.memory, destOffset, 0);
 };
 
-export const readInstruction = (state: State): number => {
+export const readInstruction = (state: CPUState): number => {
     const instructionBytes = readMemory(state, state.pc, 2);
 
     return (instructionBytes[0] << 8) | instructionBytes[1];
 };
 
-export const popStack = (state: State): void => {
+export const popStack = (state: CPUState): void => {
     state.pc = state.stack[state.sp];
     state.sp -= 1;
 };
 
-export const pushStack = (state: State): void => {
+export const pushStack = (state: CPUState): void => {
     state.sp += 1;
     state.stack[state.sp] = state.pc;
 };
 
-export const incrementProgramCounter = (state: State): void => {
+export const incrementProgramCounter = (state: CPUState): void => {
     state.pc += 2;
 };
 
 export const loadSystemSprites = (
-    state: State,
+    state: CPUState,
     spriteData: Buffer = SPRITES,
     offset: number = MEMORY_SPRITE_OFFSET
 ): void => {
@@ -175,11 +179,11 @@ export const loadSystemSprites = (
     state.systemFontOffset = MEMORY_SPRITE_OFFSET;
 };
 
-export const getSystemSpriteAddress = (state: State, char: Nibble): number => {
+export const getSystemSpriteAddress = (state: CPUState, char: Nibble): number => {
     return state.systemFontOffset + getSystemSpriteOffset(char);
 };
 
-export const drawSprite = (state: State, origin: Coordinate2D, bytes: Uint8Array): void => {
+export const drawSprite = (state: CPUState, origin: Coordinate2D, bytes: Uint8Array): void => {
     const [originX, originY] = origin;
 
     const vx = originX % state.io.displayWidth;

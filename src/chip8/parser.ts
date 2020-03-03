@@ -1,7 +1,7 @@
 import random from 'random';
 import { ADDRESS_MASK, NIBBLE_MASK, Nibble, Byte, BYTE_MASK, Word, BIT_MASK } from '../util/mask';
 import {
-    State,
+    CPUState,
     popStack,
     pushStack,
     readRegister,
@@ -15,7 +15,6 @@ import {
     getSystemSpriteAddress,
     drawSprite,
 } from './state';
-import { pixelIterator } from './sprite';
 import { hex, reg, pad } from '../util/string';
 import { Coordinate2D } from '../util/2d';
 
@@ -31,7 +30,7 @@ const NOOP = () => undefined;
 
 export interface Instruction {
     desc: () => string;
-    execute: (state: State) => void;
+    execute: (state: CPUState) => void;
 }
 
 export const parseInstruction = (instruction: Word): Instruction => {
@@ -42,12 +41,12 @@ export const parseInstruction = (instruction: Word): Instruction => {
             if (instruction === 0x00e0) {
                 return {
                     desc: () => 'CLS',
-                    execute: (state: State) => state.io.clearDisplay(),
+                    execute: (state: CPUState) => state.io.clearDisplay(),
                 };
             } else if (instruction === 0x00ee) {
                 return {
                     desc: () => 'RET',
-                    execute: (state: State) => {
+                    execute: (state: CPUState) => {
                         popStack(state);
                     },
                 };
@@ -66,7 +65,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
 
             return {
                 desc: () => `JP ${hex(a, 3)}`,
-                execute: (state: State) => {
+                execute: (state: CPUState) => {
                     state.pc = a;
                 },
             };
@@ -77,7 +76,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
 
             return {
                 desc: () => `CALL ${hex(a, 3)}`,
-                execute: (state: State) => {
+                execute: (state: CPUState) => {
                     pushStack(state);
                     state.pc = a;
                 },
@@ -90,7 +89,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
 
             return {
                 desc: () => `SE ${reg(rx)}{}, ${hex(byte, 2)}}`,
-                execute: (state: State) => {
+                execute: (state: CPUState) => {
                     const vx = readRegister(state, rx);
                     if (vx === byte) incrementProgramCounter(state);
                 },
@@ -103,7 +102,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
 
             return {
                 desc: () => `SNE ${reg(rx)}{, ${hex(byte, 2)}}`,
-                execute: (state: State) => {
+                execute: (state: CPUState) => {
                     const vx = readRegister(state, rx);
                     if (vx !== byte) incrementProgramCounter(state);
                 },
@@ -116,7 +115,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
 
             return {
                 desc: () => `SE ${reg(rx)}, ${reg(ry)}`,
-                execute: (state: State) => {
+                execute: (state: CPUState) => {
                     const vx = readRegister(state, rx);
                     const vy = readRegister(state, ry);
                     if (vx === vy) incrementProgramCounter(state);
@@ -130,7 +129,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
 
             return {
                 desc: () => `LD ${reg(rx)}, ${hex(byte, 2)}`,
-                execute: (state: State) => {
+                execute: (state: CPUState) => {
                     setRegister(state, rx, byte);
                 },
             };
@@ -142,7 +141,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
 
             return {
                 desc: () => `ADD ${reg(rx)}, ${hex(byte, 2)}`,
-                execute: (state: State) => {
+                execute: (state: CPUState) => {
                     const vx = readRegister(state, rx);
                     // TODO do we need to handle carry flag?
                     setRegister(state, rx, vx + byte);
@@ -159,7 +158,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // LD Vx, Vy
                     return {
                         desc: () => `LD ${reg(rx)}, ${reg(ry)}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const vy = readRegister(state, ry);
                             setRegister(state, rx, vy);
                         },
@@ -169,7 +168,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // OR Vx, Vy
                     return {
                         desc: () => `OR ${reg(rx)}, ${reg(ry)}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const vx = readRegister(state, rx);
                             const vy = readRegister(state, ry);
                             setRegister(state, rx, vx | vy);
@@ -180,7 +179,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // AND Vx, Vy
                     return {
                         desc: () => `AND ${reg(rx)}, ${reg(ry)}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const vx = readRegister(state, rx);
                             const vy = readRegister(state, ry);
                             setRegister(state, rx, vx & vy);
@@ -191,7 +190,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // XOR Vx, Vy
                     return {
                         desc: () => `XOR ${reg(rx)}, ${reg(ry)}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const vx = readRegister(state, rx);
                             const vy = readRegister(state, ry);
                             setRegister(state, rx, vx ^ vy);
@@ -202,7 +201,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // ADD Vx, Vy
                     return {
                         desc: () => `ADD ${reg(rx)}, ${reg(ry)}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const vx = readRegister(state, rx);
                             const vy = readRegister(state, ry);
                             const sum = vx + vy;
@@ -216,7 +215,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // SUB Vx, Vy
                     return {
                         desc: () => `SUB ${reg(rx)}, ${reg(ry)}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const vx = readRegister(state, rx);
                             const vy = readRegister(state, ry);
 
@@ -231,7 +230,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // SHR Vx {, Vy}
                     return {
                         desc: () => `SHR ${reg(rx)} {, ${reg(ry)}}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const vy = readRegister(state, ry);
                             setRegister(state, rx, vy >> 1);
                             setRegister(state, Register.VF, vy & BIT_MASK);
@@ -242,7 +241,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // SUBN Vx, Vy
                     return {
                         desc: () => `SUBN ${reg(rx)}, ${reg(ry)}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const vx = readRegister(state, rx);
                             const vy = readRegister(state, ry);
 
@@ -257,7 +256,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // SHL Vx {, Vy}
                     return {
                         desc: () => `SHL ${reg(rx)} {, ${reg(ry)}}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const vy = readRegister(state, ry);
                             setRegister(state, rx, vy << 1);
                             setRegister(state, Register.VF, (vy >> 7) & BIT_MASK);
@@ -273,7 +272,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
 
             return {
                 desc: () => `SNE ${reg(rx)}, ${reg(ry)}`,
-                execute: (state: State) => {
+                execute: (state: CPUState) => {
                     const vx = readRegister(state, rx);
                     const vy = readRegister(state, ry);
 
@@ -287,7 +286,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
 
             return {
                 desc: () => `LD I, ${hex(a, 3)}`,
-                execute: (state: State) => {
+                execute: (state: CPUState) => {
                     setAddressRegister(state, a);
                 },
             };
@@ -298,7 +297,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
 
             return {
                 desc: () => `JP V0, ${hex(a, 3)}`,
-                execute: (state: State) => {
+                execute: (state: CPUState) => {
                     state.pc = a + readRegister(state, Register.V0);
                 },
             };
@@ -310,7 +309,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
 
             return {
                 desc: () => `RND ${reg(rx)}, ${hex(byte, 2)}`,
-                execute: (state: State) => {
+                execute: (state: CPUState) => {
                     const randomValue = random.int(0, 255); // TODO make seedable
                     setRegister(state, rx, randomValue & byte);
                 },
@@ -324,7 +323,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
 
             return {
                 desc: () => `DRW ${reg(rx)}, ${reg(ry)}, ${hex(nibble, 1)}`,
-                execute: (state: State) => {
+                execute: (state: CPUState) => {
                     const origin = [rx, ry].map((reg) => readRegister(state, reg)) as Coordinate2D;
 
                     // Get the bytes representing the sprite
@@ -343,7 +342,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // SKP Vx
                     return {
                         desc: () => `SKP ${reg(rx)}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const vx = readRegister(state, rx);
                             if (state.io.isKeyPressed(vx)) incrementProgramCounter(state);
                         },
@@ -353,7 +352,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // SKNP Vx
                     return {
                         desc: () => `SKNP ${reg(rx)}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const vx = readRegister(state, rx);
                             if (!state.io.isKeyPressed(vx)) incrementProgramCounter(state);
                         },
@@ -370,7 +369,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // LD Vx, DT
                     return {
                         desc: () => `LD ${reg(rx)}, DT`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             setRegister(state, rx, state.dt);
                         },
                     };
@@ -379,7 +378,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // LD Vx, K
                     return {
                         desc: () => `LD ${reg(rx)}, K`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const val = state.io.waitForKeypress();
                             setRegister(state, rx, val);
                         },
@@ -389,7 +388,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // LD DT, Vx
                     return {
                         desc: () => `LD DT, ${reg(rx)}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const vx = readRegister(state, rx);
                             state.dt = vx;
                         },
@@ -399,7 +398,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // LD ST, Vx
                     return {
                         desc: () => `LD ST, ${reg(rx)}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const vx = readRegister(state, rx);
                             state.st = vx;
                         },
@@ -409,7 +408,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // ADD I, Vx
                     return {
                         desc: () => `ADD I, ${reg(rx)}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const vx = readRegister(state, rx);
                             const i = readAddressRegister(state);
                             setAddressRegister(state, i + vx);
@@ -420,7 +419,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // LD F, Vx
                     return {
                         desc: () => `LD F, ${reg(rx)}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const digit = readRegister(state, rx);
                             const spriteAddress = getSystemSpriteAddress(state, digit);
                             setAddressRegister(state, spriteAddress);
@@ -431,7 +430,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // LD B, Vx
                     return {
                         desc: () => `LD B, ${reg(rx)}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const vx = readRegister(state, rx);
                             const str = pad(vx.toString(), 3);
 
@@ -447,7 +446,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // LD [I], Vx
                     return {
                         desc: () => `LD [I], ${reg(rx)}`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const registerValues = state.registers.slice(0, rx);
 
                             setMemory(
@@ -462,7 +461,7 @@ export const parseInstruction = (instruction: Word): Instruction => {
                     // LD Vx, [I]
                     return {
                         desc: () => `LD ${reg(rx)}, [I]`,
-                        execute: (state: State) => {
+                        execute: (state: CPUState) => {
                             const values = readMemory(state, readAddressRegister(state), rx);
 
                             Buffer.from(values).copy(state.registers);
