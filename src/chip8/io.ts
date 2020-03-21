@@ -19,7 +19,7 @@ export interface CPUInterface {
      * @param y {number} y-coordinate of the pixel (will wrap if it overflows the display height)
      * @param value {boolean} If true, represents a 1 for this pixel; otherwise, represents a 0
      *
-     * @returns true if a pixel was erased, false otherwise
+     * @returns 1 if a pixel was erased, 0 otherwise
      */
     drawPixel: (x: number, y: number, value: number) => number;
 
