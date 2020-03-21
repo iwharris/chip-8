@@ -2,26 +2,38 @@ import { Nibble } from '../util/mask';
 import { Coordinate2D } from '../util/2d';
 
 /**
- * Height of each system sprite, in bytes
+ * Height (rows) of each system sprite
  */
 export const SYSTEM_SPRITE_HEIGHT = 5;
 
 /**
- * Width of each sprite, in bytes
+ * Width (columns) of each system sprite
  */
-export const SPRITE_WIDTH = 1;
+export const SPRITE_WIDTH = 8;
 
+/**
+ * Gets the memory offset (in bytes) of a given sprite character
+ *
+ * @param char
+ * @param spriteSize
+ */
 export const getSystemSpriteOffset = (char: Nibble, spriteSize: number = SYSTEM_SPRITE_HEIGHT) => {
     return char * spriteSize;
 };
 
+/**
+ * Generator function that yields (x,y) coordinates for the pixels in a sprite
+ *
+ * @param spriteHeight in bits
+ * @param spriteWidth in bits
+ */
 export function* pixelIterator(
     spriteHeight: number,
     spriteWidth: number = SPRITE_WIDTH
 ): Generator<Coordinate2D> {
     // TODO are system sprites 4 pixels wide or 8?
     for (let y = 0; y < spriteHeight; y++) {
-        for (let x = 0; x < spriteWidth * 8; x++) {
+        for (let x = 0; x < spriteWidth; x++) {
             yield [x, y];
         }
     }
