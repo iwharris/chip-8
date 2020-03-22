@@ -22,8 +22,9 @@ export const createState = (io: CPUInterface): CPUState => ({
 });
 
 export const resetState = (state: CPUState): void => {
-    state.i = 0;
+    state.pc = 0;
     state.sp = 0;
+    state.i = 0;
     state.memory = new Uint8Array(MEMORY_SIZE);
     state.registers = new Uint8Array(16);
     state.stack = new Uint16Array(16);
